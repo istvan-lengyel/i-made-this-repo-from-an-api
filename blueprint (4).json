@@ -1,0 +1,668 @@
+{
+    "name": "Stoquart Google Sheet",
+    "flow": [
+        {
+            "id": 20,
+            "module": "belazy:BeLazyWebhook",
+            "version": 1,
+            "parameters": {
+                "__IMTHOOK__": 514228
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 300
+                },
+                "restore": {
+                    "__IMTHOOK__": {
+                        "label": "Stoquart webhook"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTHOOK__",
+                        "type": "hook",
+                        "label": "Webhook",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 30,
+            "module": "belazy:ListProjectsSearch",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 1699417
+            },
+            "mapper": {
+                "limit": "100",
+                "StatusFilter": "Accepted",
+                "TestProjects": false
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 300
+                },
+                "restore": {
+                    "__IMTCONN__": {
+                        "label": "Stoquart API key"
+                    },
+                    "StatusFilter": {
+                        "mode": "chose",
+                        "label": "Accepted"
+                    },
+                    "TestProjects": {
+                        "mode": "chose"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "StatusFilter",
+                        "type": "select",
+                        "label": "Filter expression for the BeLazy project status",
+                        "validate": {
+                            "enum": [
+                                "Accepted",
+                                "Ready",
+                                "Rejected",
+                                "Transferred",
+                                "Delivered",
+                                "Closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "AcceptedAfter",
+                        "type": "uinteger",
+                        "label": "Maximum elapsed time since acceptance in minutes"
+                    },
+                    {
+                        "name": "AcceptedBefore",
+                        "type": "uinteger",
+                        "label": "Minimum elapsed time since acceptance in minutes"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Number of projects to return"
+                    },
+                    {
+                        "name": "TestProjects",
+                        "type": "boolean",
+                        "label": "List test projects",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 29,
+            "module": "regexp:Parser",
+            "version": 1,
+            "parameters": {
+                "global": false,
+                "pattern": "(?<={\"label\":\")(?<ServiceName>[^\"]+)(?=\")",
+                "multiline": false,
+                "sensitive": true,
+                "continueWhenNoRes": true
+            },
+            "mapper": {
+                "text": "{{30.destination.extraData.service}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 300
+                },
+                "parameters": [
+                    {
+                        "name": "pattern",
+                        "type": "text",
+                        "label": "Pattern",
+                        "required": true
+                    },
+                    {
+                        "name": "global",
+                        "type": "boolean",
+                        "label": "Global match",
+                        "required": true
+                    },
+                    {
+                        "name": "sensitive",
+                        "type": "boolean",
+                        "label": "Case sensitive",
+                        "required": true
+                    },
+                    {
+                        "name": "multiline",
+                        "type": "boolean",
+                        "label": "Multiline",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue the execution of the route even if the module finds no matches",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "text",
+                        "type": "text",
+                        "label": "Text"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "ServiceName",
+                        "type": "text",
+                        "label": "ServiceName"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 6,
+            "module": "google-sheets:addRow",
+            "version": 2,
+            "parameters": {
+                "__IMTCONN__": 1032235
+            },
+            "mapper": {
+                "mode": "select",
+                "values": {
+                    "0": "{{30.destination.name}}",
+                    "1": "{{30.origin.contactPerson.firstName}} {{30.origin.contactPerson.lastName}}",
+                    "2": "{{30.destination.sourceLanguage.label}}",
+                    "3": "{{30.destination.targetLanguages[].label}}",
+                    "4": "{{30.destination.specialization.label}}",
+                    "5": "{{formatDate(parseDate(30.destination.created; \"x\"); \"YYYY-MM-DD HH:mm\")}}",
+                    "6": "{{formatDate(parseDate(30.destination.deadline; \"x\"); \"YYYY-MM-DD HH:mm\")}}",
+                    "7": "{{30.destination.endCustomer}}",
+                    "8": "{{30.origin.link}}",
+                    "9": "{{formatNumber(parseNumber(30.destination.pricing.totalPrice; \".\"); ; \",\"; )}}",
+                    "10": "{{30.destination.pricing.pricingItems[].totalQuantity}}",
+                    "11": "{{30.destination.pricing.pricingItems[].weightedQuantity}}",
+                    "12": "{{30.destination.pricing.pricingItems[].unit}}"
+                },
+                "sheetId": "Sheet1",
+                "spreadsheetId": "1UAvJ3alTsVky7Tg8P8AxRrxXmIP11IXopGq7kHcUnjg",
+                "includesHeaders": true,
+                "insertDataOption": "INSERT_ROWS",
+                "valueInputOption": "USER_ENTERED"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 300
+                },
+                "restore": {
+                    "mode": {
+                        "label": "Select spreadsheet and sheet"
+                    },
+                    "sheetId": {
+                        "label": "Sheet1"
+                    },
+                    "__IMTCONN__": {
+                        "label": "BeLazy István Lengyel (istvan.lengyel@belazy.cat)"
+                    },
+                    "spreadsheetId": {
+                        "label": "Stoquart jobs"
+                    },
+                    "includesHeaders": {
+                        "label": "Yes"
+                    },
+                    "insertDataOption": {
+                        "mode": "chose",
+                        "label": "Insert rows"
+                    },
+                    "valueInputOption": {
+                        "mode": "chose",
+                        "label": "User entered"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "mode",
+                        "type": "select",
+                        "label": "Mode",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "select",
+                                "map"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "valueInputOption",
+                        "type": "select",
+                        "label": "Value input option",
+                        "validate": {
+                            "enum": [
+                                "USER_ENTERED",
+                                "RAW"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "insertDataOption",
+                        "type": "select",
+                        "label": "Insert data option",
+                        "validate": {
+                            "enum": [
+                                "INSERT_ROWS",
+                                "OVERWRITE"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "spreadsheetId",
+                        "type": "select",
+                        "label": "Spreadsheet",
+                        "required": true
+                    },
+                    {
+                        "name": "sheetId",
+                        "type": "select",
+                        "label": "Sheet",
+                        "required": true
+                    },
+                    {
+                        "name": "includesHeaders",
+                        "type": "select",
+                        "label": "Table contains headers",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "name": "values",
+                        "spec": [
+                            {
+                                "name": "0",
+                                "type": "text",
+                                "label": "Adobe WAW - 2432345_Dreamweaver_FY20_2020-09-29_DW_HO2 (fr-fr) - Translation [LCX France] (A)"
+                            },
+                            {
+                                "name": "1",
+                                "type": "text",
+                                "label": "(B)"
+                            },
+                            {
+                                "name": "2",
+                                "type": "text",
+                                "label": "English (United States) (C)"
+                            },
+                            {
+                                "name": "3",
+                                "type": "text",
+                                "label": "French (France) (D)"
+                            },
+                            {
+                                "name": "4",
+                                "type": "text",
+                                "label": "Computing Software (E)"
+                            },
+                            {
+                                "name": "5",
+                                "type": "text",
+                                "label": "2020-09-29 12:44 (F)"
+                            },
+                            {
+                                "name": "6",
+                                "type": "text",
+                                "label": "2020-09-30 13:00 (G)"
+                            },
+                            {
+                                "name": "7",
+                                "type": "text",
+                                "label": "Adobe (H)"
+                            },
+                            {
+                                "name": "8",
+                                "type": "text",
+                                "label": "https://lcx-jobboard.lionbridge.com/accepted-jobs/64ee2890-f842-445b-b526-011c1804248e (I)"
+                            },
+                            {
+                                "name": "9",
+                                "type": "text",
+                                "label": "€16.00 (J)"
+                            },
+                            {
+                                "name": "10",
+                                "type": "text",
+                                "label": "Delivered (K)"
+                            },
+                            {
+                                "name": "11",
+                                "type": "text",
+                                "label": "(L)"
+                            },
+                            {
+                                "name": "12",
+                                "type": "text",
+                                "label": "(M)"
+                            },
+                            {
+                                "name": "13",
+                                "type": "text",
+                                "label": "(N)"
+                            },
+                            {
+                                "name": "14",
+                                "type": "text",
+                                "label": "(O)"
+                            },
+                            {
+                                "name": "15",
+                                "type": "text",
+                                "label": "(P)"
+                            },
+                            {
+                                "name": "16",
+                                "type": "text",
+                                "label": "(Q)"
+                            },
+                            {
+                                "name": "17",
+                                "type": "text",
+                                "label": "(R)"
+                            },
+                            {
+                                "name": "18",
+                                "type": "text",
+                                "label": "(S)"
+                            },
+                            {
+                                "name": "19",
+                                "type": "text",
+                                "label": "(T)"
+                            },
+                            {
+                                "name": "20",
+                                "type": "text",
+                                "label": "(U)"
+                            },
+                            {
+                                "name": "21",
+                                "type": "text",
+                                "label": "(V)"
+                            },
+                            {
+                                "name": "22",
+                                "type": "text",
+                                "label": "(W)"
+                            },
+                            {
+                                "name": "23",
+                                "type": "text",
+                                "label": "(X)"
+                            },
+                            {
+                                "name": "24",
+                                "type": "text",
+                                "label": "(Y)"
+                            },
+                            {
+                                "name": "25",
+                                "type": "text",
+                                "label": "(Z)"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Values"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 35,
+            "module": "google-email:ActionSendEmail",
+            "version": 2,
+            "parameters": {
+                "account": 1420346
+            },
+            "mapper": {
+                "cc": [],
+                "to": [
+                    "lionbridge@stoquart.com"
+                ],
+                "bcc": [],
+                "from": "",
+                "html": "Project: {{30.destination.name}}\nPM: {{30.destination.contactPerson.firstName}} {{30.destination.contactPerson.lastName}}\nSource: {{30.destination.sourceLanguage.label}}\nTarget: {{30.destination.targetLanguages[].label}}\nSpecialization: {{30.destination.specialization.label}}\nStart date: {{formatDate(parseDate(30.destination.created; \"x\"); \"YYYY-MM-DD HH:mm\")}}\nDelivery date: {{formatDate(parseDate(30.destination.deadline; \"x\"); \"YYYY-MM-DD HH:mm\")}}\nEnd client: {{30.destination.endCustomer}}\nLink to project: {{30.destination.link}}\nPrice: {{30.destination.pricing.totalPrice}} {{30.destination.pricing.currency}}\nTotal: {{30.destination.pricing.pricingItems[].totalQuantity}}\nWeighted: {{30.destination.pricing.pricingItems[].weightedQuantity}}\nUnit: {{30.destination.pricing.pricingItems[].unit}}",
+                "subject": "{{30.destination.name}} available",
+                "attachments": []
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1220,
+                    "y": 416
+                },
+                "restore": {
+                    "cc": {
+                        "mode": "chose",
+                        "items": []
+                    },
+                    "to": {
+                        "mode": "chose",
+                        "items": [
+                            "undefined"
+                        ]
+                    },
+                    "bcc": {
+                        "mode": "chose",
+                        "items": []
+                    },
+                    "account": {
+                        "label": "BeLazy Google email storage (istvan.lengyel@belazy.cat)"
+                    },
+                    "attachments": {
+                        "mode": "chose",
+                        "items": []
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "from",
+                        "type": "text",
+                        "label": "From"
+                    },
+                    {
+                        "name": "to",
+                        "spec": {
+                            "name": " ",
+                            "type": "email",
+                            "label": "Email address",
+                            "required": true
+                        },
+                        "type": "array",
+                        "label": "To",
+                        "labels": {
+                            "add": "Add a recipient",
+                            "edit": "Edit a recipient"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "subject",
+                        "type": "text",
+                        "label": "Subject"
+                    },
+                    {
+                        "name": "html",
+                        "type": "text",
+                        "label": "Content"
+                    },
+                    {
+                        "name": "attachments",
+                        "spec": [
+                            {
+                                "name": "fileName",
+                                "type": "filename",
+                                "label": "File name",
+                                "required": true,
+                                "semantic": "file:name"
+                            },
+                            {
+                                "name": "data",
+                                "type": "buffer",
+                                "label": "Data",
+                                "required": true,
+                                "semantic": "file:data"
+                            },
+                            {
+                                "name": "cid",
+                                "type": "text",
+                                "label": "Content-ID"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Attachments",
+                        "labels": {
+                            "add": "Add an attachment",
+                            "edit": "Edit an attachment"
+                        }
+                    },
+                    {
+                        "name": "cc",
+                        "spec": {
+                            "type": "email",
+                            "label": "Email address"
+                        },
+                        "type": "array",
+                        "label": "Copy recipient",
+                        "labels": {
+                            "add": "Add a copy recipient",
+                            "edit": "Edit a copy recipient"
+                        }
+                    },
+                    {
+                        "name": "bcc",
+                        "spec": {
+                            "type": "email",
+                            "label": "Email address"
+                        },
+                        "type": "array",
+                        "label": "Blind copy recipient",
+                        "labels": {
+                            "add": "Add a blind copy recipient",
+                            "edit": "Edit a blind copy recipient"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": 18,
+            "module": "belazy:AcknowledgeProject",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 1699417
+            },
+            "mapper": {
+                "projectId": "{{30.id}}",
+                "externalId": "{{6.rowNumber}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1500,
+                    "y": 600
+                },
+                "restore": {
+                    "__IMTCONN__": {
+                        "label": "Stoquart API key"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "projectId",
+                        "type": "text",
+                        "label": "Project ID",
+                        "required": true
+                    },
+                    {
+                        "name": "externalId",
+                        "type": "text",
+                        "label": "ID in the BMS"
+                    },
+                    {
+                        "name": "link",
+                        "type": "text",
+                        "label": "Link to the BMS project"
+                    }
+                ]
+            },
+            "onerror": [
+                {
+                    "id": 34,
+                    "module": "builtin:Ignore",
+                    "version": 1,
+                    "metadata": {
+                        "designer": {
+                            "x": 1800,
+                            "y": 600
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "shatter": false,
+            "maxErrors": 3,
+            "autoCommit": false,
+            "sequential": false,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu1.integromat.com"
+    }
+}
